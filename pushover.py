@@ -232,3 +232,72 @@ class Pushover(object):
                 payload[key] = value
 
         return Request("post", GLANCE_URL, payload)
+
+"""Backward-compatible client interface and init() function.
+
+This provides a minimal shim so external code can do:
+
+    from pushover import init, Client
+    init("<api-token>")
+    Client("<user-key>").send_message("Hello")
+
+The shim delegates to the existing Pushover class.
+"""
+
+_DEFAULT_API_TOKEN = None
+
+
+def init(api_token):
+    """Set a default API token for subsequent Client instances.
+
+    Parameters
+    ----------
+    api_token: str
+        Pushover application API token.
+    """
+    global _DEFAULT_API_TOKEN
+    _DEFAULT_API_TOKEN = api_token
+
+
+class Client(object):
+    """Simple wrapper mirroring the historical API.
+
+    Parameters
+    ----------
+    user_key: str
+        Target user key to send notifications to.
+    api_token: str, optional
+        Application API token. If omitted, the value set via init() is used.
+    device: str, optional
+        Target device name.
+    """
+
+    def __init__(self, user_key=None, api_token=None, device=None):
+        if user_key is None:
+            raise ValueError("user_key is required")
+        self.user_key = user_key
+        self.device = device
+        self.api_token = api_token or _DEFAULT_API_TOKEN
+        if not self.api_token:
+            raise RuntimeError(
+                "No API token configured. Call init(token) or pass api_token to Client."
+            )
+        self._pushover = Pushover(self.api_token)
+
+    def send_message(self, message, **kwargs):
+        """Send a message using the wrapped Pushover client.
+
+        All keyword arguments are forwarded to Pushover.message.
+        """
+        if self.device and "device" not in kwargs:
+            kwargs["device"] = self.device
+        return self._pushover.message(self.user_key, message, **kwargs)
+
+    def send_glance(self, **kwargs):
+        """Send a glance notification to the user.
+
+        All keyword arguments are forwarded to Pushover.glance.
+        """
+        if self.device and "device" not in kwargs:
+            kwargs["device"] = self.device
+        return self._pushover.glance(self.user_key, **kwargs)
