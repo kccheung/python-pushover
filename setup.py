@@ -7,17 +7,17 @@ setup(
     version="1.0",
     description="Comprehensive bindings and command line utility for the "
     "Pushover notification service",
-    long_description=open("README.rst").read()
+    long_description=open("README.rst", encoding="utf-8").read()
     + "\n"
-    + open("AUTHORS.rst").read()
+    + open("AUTHORS.rst", encoding="utf-8").read()
     + "\n"
-    + open("CHANGES.rst").read(),
+    + open("CHANGES.rst", encoding="utf-8").read(),
     url="https://github.com/Thibauth/python-pushover",
     author="Thibaut Horel",
     author_email="thibaut.horel+pushover@gmail.com",
     py_modules=["pushover", "cli"],
     entry_points={"console_scripts": ["pushover = cli:main"]},
     install_requires=["requests>=1.0"],
-    use_2to3=True,
+    python_requires=">=3.7",
     license="GNU GPLv3",
 )
